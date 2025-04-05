@@ -1,9 +1,9 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import Navigation from './Navigation'; // Assuming this component exists and is styled
-import { Button } from './ui/button'; // Assuming this is your ShadCN/custom button
-import { useAuth } from '@/context/AuthContext';
-import { LogOut, User } from 'lucide-react'; // Added User icon for sign in
+import React from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Navigation from "./Navigation"; // Assuming this component exists and is styled
+import { Button } from "./ui/button"; // Assuming this is your ShadCN/custom button
+import { useAuth } from "@/context/AuthContext";
+import { LogOut, User } from "lucide-react"; // Added User icon for sign in
 
 const NeoBrutalistHeader = () => {
   const { user, signOut } = useAuth();
@@ -32,7 +32,7 @@ const NeoBrutalistHeader = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate("/");
   };
 
   return (
@@ -54,7 +54,7 @@ const NeoBrutalistHeader = () => {
                   shadow-neo hover:shadow-neo-lg group-hover:-translate-x-1 group-hover:-translate-y-1
                   transition-all duration-150 ease-out cursor-pointer
                 "
-                style={{ textShadow: '2px 2px 0px var(--color-pop-blue)' }}
+                style={{ textShadow: "2px 2px 0px var(--color-pop-blue)" }}
               >
                 POP<span className="text-pop-blue">NEWS</span>
               </h1>
@@ -80,7 +80,7 @@ const NeoBrutalistHeader = () => {
                   <div className="flex items-center gap-2">
                     {user.email && (
                       <span className="text-sm font-medium text-pop-white hidden md:inline">
-                        {user.email.split('@')[0]}
+                        {user.email.split("@")[0]}
                       </span>
                     )}
                     <Button
