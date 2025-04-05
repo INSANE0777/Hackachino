@@ -1,32 +1,34 @@
-import { NewsResponse } from "../types/types";
 
-// GNews API configuration
-const GNEWS_API_KEY = "1b7830682943b422b72314135bbf981e"; // Provided API key
+import { NewsResponse } from "../types/types";
+import { supabase } from "@/integrations/supabase/client";
+
+const GNEWS_API_KEY = "53563c4c2c54822708b2dedfaadfac69"; // API key provided by user
 const GNEWS_BASE_URL = "https://gnews.io/api/v4";
 
-// Gemini API configuration (update with your real API key and endpoint)
-const GEMINI_API_KEY = "AIzaSyBo0_nEWdFfUgNWawGmGOHcm4Sm3Av0coQ";
-const GEMINI_BASE_URL = "https://gemini.example.com/api/verify"; // Replace with the actual Gemini endpoint
-
-/**
- * Fetch news articles by topic from GNews API.
- */
 export const fetchNewsByTopic = async (topic: string): Promise<NewsResponse> => {
   try {
     console.log(`Fetching news for topic: ${topic}`);
+    
     const response = await fetch(
       `${GNEWS_BASE_URL}/search?q=${encodeURIComponent(topic)}&token=${GNEWS_API_KEY}&lang=en`
     );
+    
     if (!response.ok) {
       throw new Error(`Failed to fetch news: ${response.statusText}`);
     }
+    
     const data = await response.json();
     console.log(`Received ${data.articles?.length || 0} articles for topic: ${topic}`);
     
-    // Transform response to match our NewsResponse structure
+    // Transform the GNews API response to match our app's NewsResponse structure
     const transformedData: NewsResponse = {
       totalArticles: data.totalArticles || 0,
-      articles: data.articles?.map((article: any) => ({
+      articles: []
+    };
+    
+    // Process each article and generate AI summaries
+    for (const article of data.articles || []) {
+      const processedArticle = {
         title: article.title || "",
         description: article.description || "",
         content: article.content || "",
@@ -37,28 +39,55 @@ export const fetchNewsByTopic = async (topic: string): Promise<NewsResponse> => 
           name: article.source?.name || "Unknown Source",
           url: article.source?.url || "#",
         },
-        // Retain mock AI summaries for now
-        aiSummary: [
+        aiSummary: [] // Will be populated with Gemini-generated summaries
+      };
+      
+      try {
+        // Generate AI summary using Gemini API via our edge function
+        const summaryResponse = await supabase.functions.invoke('generate-summary', {
+          body: {
+            articleText: article.content || article.description,
+            articleTitle: article.title,
+            topic: topic
+          }
+        });
+        
+        if (summaryResponse.data && summaryResponse.data.summaryPoints) {
+          processedArticle.aiSummary = summaryResponse.data.summaryPoints;
+        } else {
+          // Fallback if summary generation fails
+          processedArticle.aiSummary = [
+            `Key insights about this ${topic} story`,
+            `Important context regarding ${topic} developments`,
+            `What this means for the future of ${topic}`
+          ];
+        }
+      } catch (error) {
+        console.error("Error generating AI summary:", error);
+        // Fallback summaries
+        processedArticle.aiSummary = [
           `Key insights about this ${topic} story`,
           `Important context regarding ${topic} developments`,
           `What this means for the future of ${topic}`
-        ]
-      })) || []
-    };
+        ];
+      }
+      
+      transformedData.articles.push(processedArticle);
+    }
     
     return transformedData;
   } catch (error) {
     console.error("Error fetching news:", error);
+    // If API call fails, fall back to mock data for better UX
     console.log("Falling back to mock data due to API error");
     return getMockNewsData(topic);
   }
 };
 
-/**
- * Fallback function that generates mock news data if API call fails.
- */
+// Keep the mock data generator as a fallback
 const getMockNewsData = (topic: string): NewsResponse => {
   const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
+  
   return {
     totalArticles: 10,
     articles: [
@@ -116,76 +145,3 @@ const getMockNewsData = (topic: string): NewsResponse => {
     ]
   };
 };
-
-/**
- * Extracts potential claims from article content.
- * Here we simply split by sentence and filter for ones containing indicative verbs.
- */
-function extractClaims(articleContent: string): string[] {
-  const sentences = articleContent
-    .split('.')
-    .map(sentence => sentence.trim())
-    .filter(sentence => sentence.length > 0);
-  // Filter sentences that include common claim indicators
-  return sentences.filter(sentence =>
-    sentence.includes(" is ") || sentence.includes(" has ") || sentence.includes(" are ")
-  );
-}
-
-/**
- * Calls the Gemini API to verify a specific claim.
- */
-async function verifyClaimWithGemini(claim: string): Promise<boolean> {
-  const prompt = `Verify the following claim using reliable sources: "${claim}"`;
-  try {
-    const response = await fetch(GEMINI_BASE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({ prompt })
-    });
-    if (!response.ok) {
-      throw new Error(`Gemini API call failed: ${response.statusText}`);
-    }
-    const result = await response.json();
-    // Adjust this logic based on the actual response structure from Gemini.
-    // For example, if the API returns a confidence score or a boolean field "isVerified":
-    return result.isVerified || false;
-  } catch (error) {
-    console.error("Error verifying claim with Gemini:", error);
-    return false;
-  }
-}
-
-/**
- * Assesses an article's authenticity by verifying its extracted claims.
- */
-export async function assessArticleAuthenticity(article: any): Promise<string> {
-  const claims = extractClaims(article.content);
-  if (claims.length === 0) {
-    return "No verifiable claims found";
-  }
-  let verifiedCount = 0;
-  for (const claim of claims) {
-    if (await verifyClaimWithGemini(claim)) {
-      verifiedCount++;
-    }
-  }
-  const verificationRate = verifiedCount / claims.length;
-  return verificationRate < 0.5 ? "Potentially Fake or Misleading" : "Likely Authentic";
-}
-
-/**
- * Example usage:
- * Fetch news on a given topic and then assess the authenticity of each article.
- */
-export async function fetchAndVerifyNews(topic: string) {
-  const newsData = await fetchNewsByTopic(topic);
-  for (const article of newsData.articles) {
-    const authenticity = await assessArticleAuthenticity(article);
-    console.log(`Article: ${article.title}`);
-    console.log(`Authenticity: ${authenticity}`);
-  }
-}

@@ -127,7 +127,7 @@ const Landing = () => {
                 <img
                   src="/img.png" // Path to image in public folder
                   alt="Person reading news on device"
-                  className="w-full h-auto max-h-[400px] object-cover border-2 border-pop-black"
+                  className="w-full h-auto max-h-[300px] object-cover border-2 border-pop-black"
                 />
                 </div>
               {/* Image Accent */}
