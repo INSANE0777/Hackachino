@@ -1,6 +1,7 @@
 
 import { NewsResponse } from "../types/types";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchNewsFromAgent } from "./aiAgentService";
 
 const GNEWS_API_KEY = "53563c4c2c54822708b2dedfaadfac69"; // API key provided by user
 const GNEWS_BASE_URL = "https://gnews.io/api/v4";
@@ -144,4 +145,15 @@ const getMockNewsData = (topic: string): NewsResponse => {
       }
     ]
   };
+};
+
+// Add a new function to use the AI agent
+export const fetchNewsByTopicWithAgent = async (topic: string): Promise<NewsResponse> => {
+  try {
+    return await fetchNewsFromAgent(topic);
+  } catch (error) {
+    console.error("Error fetching news with AI agent:", error);
+    // Fall back to the original method
+    return fetchNewsByTopic(topic);
+  }
 };

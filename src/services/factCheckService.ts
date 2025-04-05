@@ -1,6 +1,23 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { FactCheckResult } from "@/types/types";
+import { analyzeArticleWithAgent } from "./aiAgentService";
+
+// Add a new function to use the AI agent
+export const analyzeArticleWithAIAgent = async (
+  articleTitle: string,
+  articleText: string,
+  articleUrl: string,
+  topic: string = "news"
+): Promise<FactCheckResult> => {
+  try {
+    return await analyzeArticleWithAgent(articleTitle, articleText, articleUrl, topic);
+  } catch (error) {
+    console.error("Error analyzing article with AI agent:", error);
+    // Fall back to the original method
+    return analyzeArticle(articleTitle, articleText, articleUrl);
+  }
+};
 
 export const analyzeArticle = async (
   articleTitle: string,
