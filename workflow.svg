@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">News Analysis System Workflow</text>
+  
+  <!-- User -->
+  <circle cx="400" cy="80" r="25" fill="#e6e6e6" stroke="#333333" stroke-width="2"/>
+  <text x="400" y="85" font-family="Arial" font-size="14" text-anchor="middle">User</text>
+  
+  <!-- API Endpoints -->
+  <rect x="100" y="150" width="150" height="50" rx="5" ry="5" fill="#f9f9ff" stroke="#333333" stroke-width="2"/>
+  <text x="175" y="175" font-family="Arial" font-size="12" text-anchor="middle">GET /api/news</text>
+  <text x="175" y="190" font-family="Arial" font-size="10" text-anchor="middle">(Search by topic)</text>
+  
+  <rect x="270" y="150" width="150" height="50" rx="5" ry="5" fill="#f9f9ff" stroke="#333333" stroke-width="2"/>
+  <text x="345" y="175" font-family="Arial" font-size="12" text-anchor="middle">POST /api/analyze</text>
+  <text x="345" y="190" font-family="Arial" font-size="10" text-anchor="middle">(Analyze article)</text>
+  
+  <rect x="440" y="150" width="150" height="50" rx="5" ry="5" fill="#f9f9ff" stroke="#333333" stroke-width="2"/>
+  <text x="515" y="175" font-family="Arial" font-size="12" text-anchor="middle">POST /api/summary</text>
+  <text x="515" y="190" font-family="Arial" font-size="10" text-anchor="middle">(Generate summary)</text>
+  
+  <rect x="610" y="150" width="150" height="50" rx="5" ry="5" fill="#f9f9ff" stroke="#333333" stroke-width="2"/>
+  <text x="685" y="175" font-family="Arial" font-size="12" text-anchor="middle">POST /api/fake-news</text>
+  <text x="685" y="190" font-family="Arial" font-size="10" text-anchor="middle">(Detect fake news)</text>
+  
+  <!-- Arrows from User to APIs -->
+  <line x1="390" y1="105" x2="175" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="105" x2="345" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="410" y1="105" x2="515" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="420" y1="105" x2="685" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Agent Workflow Box -->
+  <rect x="100" y="250" width="600" height="220" rx="10" ry="10" fill="#f2fff2" stroke="#339933" stroke-width="2" stroke-dasharray="5,5"/>
+  <text x="400" y="275" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">Agent Workflow</text>
+  
+  <!-- Workflow Steps -->
+  <rect x="130" y="300" width="120" height="60" rx="5" ry="5" fill="#bbeebb" stroke="#339933" stroke-width="2"/>
+  <text x="190" y="325" font-family="Arial" font-size="12" text-anchor="middle">fetch_news()</text>
+  <text x="190" y="340" font-family="Arial" font-size="10" text-anchor="middle">Get articles from GNews</text>
+  
+  <rect x="270" y="300" width="120" height="60" rx="5" ry="5" fill="#bbeebb" stroke="#339933" stroke-width="2"/>
+  <text x="330" y="325" font-family="Arial" font-size="12" text-anchor="middle">detect_fake_news()</text>
+  <text x="330" y="340" font-family="Arial" font-size="10" text-anchor="middle">Analyze with Gemini</text>
+  
+  <rect x="410" y="300" width="120" height="60" rx="5" ry="5" fill="#bbeebb" stroke="#339933" stroke-width="2"/>
+  <text x="470" y="325" font-family="Arial" font-size="12" text-anchor="middle">generate_summary()</text>
+  <text x="470" y="340" font-family="Arial" font-size="10" text-anchor="middle">Create bullet points</text>
+  
+  <rect x="550" y="300" width="120" height="60" rx="5" ry="5" fill="#bbeebb" stroke="#339933" stroke-width="2"/>
+  <text x="610" y="325" font-family="Arial" font-size="12" text-anchor="middle">fact_check()</text>
+  <text x="610" y="340" font-family="Arial" font-size="10" text-anchor="middle">Verify credibility</text>
+  
+  <rect x="340" y="390" width="120" height="60" rx="5" ry="5" fill="#bbeebb" stroke="#339933" stroke-width="2"/>
+  <text x="400" y="415" font-family="Arial" font-size="12" text-anchor="middle">finalize_results()</text>
+  <text x="400" y="430" font-family="Arial" font-size="10" text-anchor="middle">Compile results</text>
+  
+  <!-- Workflow Arrows -->
+  <line x1="250" y1="330" x2="270" y2="330" stroke="#339933" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="390" y1="330" x2="410" y2="330" stroke="#339933" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="530" y1="330" x2="550" y2="330" stroke="#339933" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="610" y1="360" x2="610" y2="380" stroke="#339933" stroke-width="1.5"/>
+  <line x1="610" y1="380" x2="460" y2="380" stroke="#339933" stroke-width="1.5"/>
+  <line x1="460" y1="380" x2="460" y2="390" stroke="#339933" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <!-- External Services -->
+  <ellipse cx="190" cy="490" rx="70" ry="30" fill="#bbbbff" stroke="#3333ff" stroke-width="2"/>
+  <text x="190" y="495" font-family="Arial" font-size="14" text-anchor="middle">GNews API</text>
+  
+  <ellipse cx="610" cy="490" rx="70" ry="30" fill="#bbbbff" stroke="#3333ff" stroke-width="2"/>
+  <text x="610" y="495" font-family="Arial" font-size="14" text-anchor="middle">Gemini AI API</text>
+  
+  <!-- Connections to External Services -->
+  <line x1="190" y1="360" x2="190" y2="460" stroke="#3333ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="190" y1="460" x2="190" y2="390" stroke="#3333ff" stroke-width="1.5" marker-start="url(#arrowhead)" stroke-dasharray="5,3"/>
+  
+  <line x1="330" y1="360" x2="330" y2="420" stroke="#3333ff" stroke-width="1.5"/>
+  <line x1="330" y1="420" x2="560" y2="420" stroke="#3333ff" stroke-width="1.5"/>
+  <line x1="560" y1="420" x2="560" y2="490" stroke="#3333ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <line x1="470" y1="360" x2="470" y2="430" stroke="#3333ff" stroke-width="1.5"/>
+  <line x1="470" y1="430" x2="580" y2="430" stroke="#3333ff" stroke-width="1.5"/>
+  <line x1="580" y1="430" x2="580" y2="490" stroke="#3333ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <line x1="610" y1="360" x2="610" y2="460" stroke="#3333ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="610" y1="460" x2="610" y2="390" stroke="#3333ff" stroke-width="1.5" marker-start="url(#arrowhead)" stroke-dasharray="5,3"/>
+  
+  <!-- Results -->
+  <rect x="340" y="530" width="120" height="40" rx="5" ry="5" fill="#ffffbb" stroke="#aaaa33" stroke-width="2"/>
+  <text x="400" y="555" font-family="Arial" font-size="12" text-anchor="middle">Results to User</text>
+  
+  <!-- Final Connection -->
+  <line x1="400" y1="450" x2="400" y2="530" stroke="#aaaa33" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="530" x2="400" y2="500" stroke="#aaaa33" stroke-width="1.5"/>
+  <line x1="400" y1="500" x2="400" y2="115" stroke="#aaaa33" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrow Definitions -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333333" />
+    </marker>
+  </defs>
+</svg>
