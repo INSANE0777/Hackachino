@@ -66,25 +66,25 @@ const Landing = () => {
 
         <div className="container mx-auto px-4 relative z-10">
           {/* Navigation */}
-          <nav className="flex justify-between items-center py-4 mb-10 md:mb-16">
+          <nav className="flex justify-between items-start py-4 mb-10 md:mb-16 w-full">
             <Link to="/" className="flex items-center group">
               <div className="w-8 h-8 bg-pop-yellow border-2 border-pop-black rotate-[-15deg] mr-2 group-hover:rotate-0 transition-transform"></div>
               <h1 className="text-3xl md:text-4xl font-bebas tracking-wider text-pop-black group-hover:text-pop-blue transition-colors">
                 PopNews
               </h1>
             </Link>
-            <div>
+            <div className="flex flex-col gap-2 max-w-[150px]">
               {/* Use Button component for consistency */}
               <Button
                 onClick={() => handleAuthNavigate('/auth?mode=signin')}
                 variant="outline"
-                className="bg-transparent text-pop-black hover:bg-pop-black hover:text-pop-white border-2 border-pop-black px-5 py-2 font-semibold mr-2 transition-all duration-200 shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000]"
+                className="bg-transparent text-pop-black hover:bg-pop-black hover:text-pop-white border-2 border-pop-black px-4 py-1.5 text-sm font-semibold transition-all duration-200 shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000]"
               >
                 Sign In
               </Button>
               <Button
                 onClick={() => setShowAuthModal(true)}
-                className="bg-pop-blue text-pop-white hover:bg-blue-500 border-2 border-pop-black px-5 py-2 font-semibold transition-all duration-200 shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000]"
+                className="bg-pop-blue text-pop-white hover:bg-blue-500 border-2 border-pop-black px-4 py-1.5 text-sm font-semibold transition-all duration-200 shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000]"
               >
                 Get Started
               </Button>
