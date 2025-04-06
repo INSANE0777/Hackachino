@@ -3,7 +3,7 @@ import { NewsResponse } from "../types/types";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchNewsFromAgent } from "./aiAgentService";
 
-const GNEWS_API_KEY = "53563c4c2c54822708b2dedfaadfac69"; // API key provided by user
+const GNEWS_API_KEY = "0df18457d9e427b44923da3997c56732"; // Updated API key
 const GNEWS_BASE_URL = "https://gnews.io/api/v4";
 
 export const fetchNewsByTopic = async (topic: string): Promise<NewsResponse> => {
