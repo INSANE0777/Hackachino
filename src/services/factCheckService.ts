@@ -5,6 +5,10 @@ import { FactCheckResult } from "@/types/types";
 import { analyzeArticleWithAgent } from "./aiAgentService";
 
 // Export this function to be used in NewsCard component
+// Import the new dedicated fact-checking function
+import { factCheckWithAgent } from "./aiAgentService";
+
+// Update the existing function to use our new dedicated fact-checking endpoint
 export const analyzeArticleWithAIAgent = async (
   articleTitle: string,
   articleText: string,
@@ -14,9 +18,14 @@ export const analyzeArticleWithAIAgent = async (
   try {
     console.log(`Analyzing article with AI agent: ${articleTitle}`);
     
-    // First try the AI agent
+    // First try the dedicated fact-checking function
     try {
-      const result = await analyzeArticleWithAgent(articleTitle, articleText, articleUrl, topic);
+      const result = await factCheckWithAgent(
+        articleText,
+        articleTitle,
+        articleUrl,
+        topic
+      );
       
       // Validate the result to ensure it has the expected structure
       if (result && typeof result.credibilityScore === 'number') {
@@ -24,7 +33,20 @@ export const analyzeArticleWithAIAgent = async (
         return result;
       }
     } catch (aiError) {
-      console.error("AI agent analysis failed, falling back to Supabase:", aiError);
+      console.error("Dedicated fact-checking failed, falling back to regular analyze endpoint:", aiError);
+      
+      // Fall back to the regular analyze endpoint
+      try {
+        const result = await analyzeArticleWithAgent(articleTitle, articleText, articleUrl, topic);
+        
+        // Validate the result to ensure it has the expected structure
+        if (result && typeof result.credibilityScore === 'number') {
+          console.log(`Successfully analyzed article with regular endpoint: ${articleTitle}`);
+          return result;
+        }
+      } catch (analyzeError) {
+        console.error("Regular analyze endpoint failed, falling back to Supabase:", analyzeError);
+      }
     }
     
     // If AI agent fails, fall back to Supabase

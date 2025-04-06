@@ -186,3 +186,63 @@ export const detectFakeNewsWithAgent = async (
     throw error;
   }
 };
+
+// New dedicated fact-checking function
+export const factCheckWithAgent = async (
+  text: string,
+  title: string = "User submitted content",
+  source: string = "User input",
+  topic: string = "fact check"
+): Promise<FactCheckResult> => {
+  try {
+    console.log(`Fact-checking content with AI agent, length: ${text.length} characters`);
+    
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    const response = await fetch(`${AI_AGENT_API_URL}/fact-check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        title,
+        source,
+        topic
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(`API error (${response.status}): ${errorText}`);
+      throw new Error(`Failed to fact-check content with AI agent: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("Received fact check data:", data);
+    
+    // Validate the response structure
+    if (!data || typeof data.credibilityScore !== 'number') {
+      console.error("Invalid response format:", data);
+      throw new Error("Invalid response format from AI agent");
+    }
+    
+    // Normalize the response
+    return {
+      credibilityScore: Math.min(10, Math.max(0, data.credibilityScore)),
+      reliabilityPoints: Array.isArray(data.reliabilityPoints) ? data.reliabilityPoints : [],
+      misinformationWarning: data.misinformationWarning || null,
+      sourceVerification: Array.isArray(data.sourceVerification) ? data.sourceVerification : [],
+      contentIssues: Array.isArray(data.contentIssues) ? data.contentIssues : [],
+      suggestedSources: Array.isArray(data.suggestedSources) ? data.suggestedSources : []
+    };
+  } catch (error) {
+    console.error("Error in factCheckWithAgent service:", error);
+    throw error;
+  }
+};

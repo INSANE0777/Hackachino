@@ -211,8 +211,8 @@ def fact_check(state: AgentState) -> AgentState:
         
     for article in state.articles:
         try:
-            # Skip if content is too short
-            if len(article["content"]) < 50:
+            # Only skip if content is extremely short (less than 20 chars)
+            if len(article["content"]) < 20:
                 article["factCheck"] = {
                     "credibilityScore": 5,
                     "reliabilityPoints": [
@@ -235,47 +235,46 @@ def fact_check(state: AgentState) -> AgentState:
                 }
                 continue
                 
+            # Improved prompt for better fact-checking
             prompt = f"""
             You are a professional fact-checker with expertise in source verification and misinformation detection.
             
-            Here's a news article to analyze:
+            Here's a news article or statement to analyze:
             Title: {article['title']}
             Content: {article['content']}
-            Source URL: {article['url']}
+            Source: {article.get('url', 'Unknown')}
             
-            Please perform a comprehensive analysis of this article:
+            Please perform a comprehensive analysis of this content:
             
             1. Credibility Assessment:
                - Evaluate the credibility on a scale of 1-10 (where 10 is highly credible)
-               - Consider factors like source reputation, author expertise, citation quality, and evidence presented
+               - Even with limited content, provide your best assessment
+               - Consider factors like factual accuracy, logical consistency, and potential bias
             
             2. Source Verification:
-               - Identify which authoritative sources would typically cover this topic
-               - Note if information contradicts established reliable sources
-               - Check if claims align with consensus among reputable outlets
+               - If a source is provided, evaluate its reliability
+               - If no source is provided, suggest what reliable sources might cover this topic
             
             3. Content Analysis:
                - Look for logical fallacies or misleading framing
                - Check for emotional manipulation or sensationalism
                - Identify potential partisan bias or agenda-driven content
-               - Note any information presented out of context
             
             4. Reliability Points:
-               - Provide 4-5 specific, detailed points about the reliability of this article
-               - Include both strengths and potential weaknesses in reporting
+               - Provide 3-5 specific points about the reliability of this content
+               - Include both strengths and potential weaknesses
             
             5. Misinformation Warning:
                - If applicable, provide a specific warning about potential misinformation
-               - Explain exactly what claims may be misleading and why
-               - Suggest specific trusted sources where one could verify these claims
+               - If not applicable, return null for this field
             
             Format your response as a JSON object with these fields:
             - credibilityScore (number between 1-10)
-            - reliabilityPoints (array of 4-5 detailed strings)
-            - misinformationWarning (detailed string or null if no issues detected)
-            - sourceVerification (array of 2-3 strings with source verification details)
-            - contentIssues (array of strings highlighting specific content issues, or empty array if none)
-            - suggestedSources (array of strings naming 2-3 reliable sources that could verify this topic)
+            - reliabilityPoints (array of strings)
+            - misinformationWarning (string or null)
+            - sourceVerification (array of strings)
+            - contentIssues (array of strings)
+            - suggestedSources (array of strings)
             """
             
             response = requests.post(
@@ -284,13 +283,15 @@ def fact_check(state: AgentState) -> AgentState:
                 json={
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {
-                        "temperature": 0.1,
+                        "temperature": 0.2,
                         "maxOutputTokens": 2048,
                     }
                 }
             )
             
             if response.status_code != 200:
+                print(f"Gemini API error: {response.status_code}")
+                print(response.text)
                 raise Exception(f"Gemini API error: {response.status_code}")
                 
             data = response.json()
@@ -300,22 +301,30 @@ def fact_check(state: AgentState) -> AgentState:
             import re
             json_match = re.search(r'(\{.*\})', generated_text, re.DOTALL)
             if json_match:
-                fact_check_result = json.loads(json_match.group(1))
-                article["factCheck"] = fact_check_result
+                result = json.loads(json_match.group(1))
+                article["factCheck"] = {
+                    "credibilityScore": result.get("credibilityScore", 5),
+                    "reliabilityPoints": result.get("reliabilityPoints", []),
+                    "misinformationWarning": result.get("misinformationWarning", None),
+                    "sourceVerification": result.get("sourceVerification", []),
+                    "contentIssues": result.get("contentIssues", []),
+                    "suggestedSources": result.get("suggestedSources", [])
+                }
+                print(f"Successfully fact-checked article: {article['title'][:30]}...")
             else:
-                # Fallback fact check
+                print(f"Failed to parse JSON from Gemini response: {generated_text[:100]}...")
+                # More informative fallback
                 article["factCheck"] = {
                     "credibilityScore": 5,
                     "reliabilityPoints": [
-                        "Error analyzing article content",
+                        "AI analysis encountered formatting issues",
                         "Consider cross-checking with other sources",
-                        "Review the article critically before sharing",
-                        "Consult established fact-checking organizations"
+                        "Review the content critically before sharing"
                     ],
-                    "misinformationWarning": "Analysis error - please review content carefully",
+                    "misinformationWarning": "AI analysis was incomplete - exercise caution",
                     "sourceVerification": [
-                        "Source verification failed due to technical error",
-                        "Consider manual verification through fact-checking websites"
+                        "Source verification was not completed",
+                        "Consider checking fact-checking websites"
                     ],
                     "contentIssues": [],
                     "suggestedSources": [
@@ -326,13 +335,14 @@ def fact_check(state: AgentState) -> AgentState:
                 }
                 
         except Exception as e:
+            print(f"Error in fact_check: {str(e)}")
+            # Provide a more informative error response
             article["factCheck"] = {
                 "credibilityScore": 5,
                 "reliabilityPoints": [
-                    "Error analyzing article content",
+                    f"Error during analysis: {str(e)}",
                     "Consider cross-checking with other sources",
-                    "Review the article critically before sharing",
-                    "Consult established fact-checking organizations"
+                    "Review the content critically before sharing"
                 ],
                 "misinformationWarning": "Analysis error - please review content carefully",
                 "sourceVerification": [
@@ -346,7 +356,6 @@ def fact_check(state: AgentState) -> AgentState:
                     "BBC"
                 ]
             }
-            article["error"] = f"Error in fact checking: {str(e)}"
     
     return state
 
