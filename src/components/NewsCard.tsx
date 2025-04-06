@@ -49,6 +49,62 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, color = 'pop-blue' }) => {
     }
   };
   
+  const NewsCard = ({ article, onReadMore }: NewsCardProps) => {
+    const [imageError, setImageError] = useState(false);
+    const defaultImage = "/images/news-placeholder.jpg"; // Make sure this file exists in public/images
+    
+    // Handle image loading errors
+    const handleImageError = () => {
+      setImageError(true);
+    };
+  
+    // Determine reliability class and text based on available data
+    let reliabilityClass = "bg-gray-400"; // Default neutral
+    let reliabilityText = "Unverified";
+    
+    if (article.factCheck) {
+      const credibilityScore = article.factCheck.credibilityScore || 5;
+      
+      if (credibilityScore >= 7) {
+        reliabilityClass = "bg-green-500";
+        reliabilityText = "Reliable";
+      } else if (credibilityScore >= 4) {
+        reliabilityClass = "bg-yellow-500";
+        reliabilityText = "Questionable";
+      } else {
+        reliabilityClass = "bg-red-500";
+        reliabilityText = "Unreliable";
+      }
+    } else if (article.isFake !== undefined) {
+      // If we have fake news detection but no fact check
+      if (article.isFake) {
+        reliabilityClass = "bg-red-500";
+        reliabilityText = "Unreliable";
+      } else {
+        reliabilityClass = "bg-green-500";
+        reliabilityText = "Reliable";
+      }
+    }
+  
+    return (
+      <div className="bg-white border-4 border-pop-black p-4 shadow-brutal mb-6">
+        <div className="relative mb-4 overflow-hidden border-2 border-pop-black aspect-video">
+          <img
+            src={imageError ? defaultImage : (article.image || defaultImage)}
+            alt={article.title}
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
+          <div className={`absolute top-0 right-0 ${reliabilityClass} text-white px-2 py-1 text-sm font-bold`}>
+            {reliabilityText}
+          </div>
+        </div>
+        
+        {/* ... rest of the component ... */}
+      </div>
+    );
+  };
+  
   return (
     <div className={`card-brutal overflow-hidden mb-8 bg-white hover:-translate-y-1 transition-all`}>
       <div className={`border-b-4 border-pop-black bg-${bgColor} h-2`}></div>

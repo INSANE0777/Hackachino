@@ -17,10 +17,24 @@ export const fetchNewsFromAgent = async (topic: string): Promise<NewsResponse> =
     const data = await response.json();
     console.log(`Received ${data.articles?.length || 0} articles from AI agent for topic: ${topic}`);
     
-    // Transform the AI agent response to match our app's NewsResponse structure
+    // Transform and normalize the AI agent response
+    const transformedArticles = (data.articles || []).map(article => {
+      // Ensure we have proper default values for all fields
+      return {
+        ...article,
+        // Use a fallback image if none provided or use Unsplash for random topic images
+        image: article.image || `https://source.unsplash.com/random/800x600/?${encodeURIComponent(topic)}`,
+        // Ensure factCheck has default values if missing
+        factCheck: article.factCheck || null,
+        // Ensure fake news detection fields are properly set
+        fakeNewsScore: article.fakeNewsScore !== undefined ? article.fakeNewsScore : null,
+        isFake: article.isFake !== undefined ? article.isFake : null
+      };
+    });
+    
     const transformedData: NewsResponse = {
-      totalArticles: data.articles?.length || 0,
-      articles: data.articles || []
+      totalArticles: transformedArticles.length,
+      articles: transformedArticles
     };
     
     return transformedData;
