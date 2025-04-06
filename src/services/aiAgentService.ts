@@ -2,6 +2,8 @@ import { NewsResponse, FactCheckResult } from "../types/types";
 
 const AI_AGENT_API_URL = "http://localhost:5000/api";
 
+// Add this function to your aiAgentService.ts file
+
 export const fetchNewsFromAgent = async (topic: string): Promise<NewsResponse> => {
   try {
     console.log(`Fetching news from AI agent for topic: ${topic}`);
@@ -24,11 +26,24 @@ export const fetchNewsFromAgent = async (topic: string): Promise<NewsResponse> =
         ...article,
         // Use a fallback image if none provided or use Unsplash for random topic images
         image: article.image || `https://source.unsplash.com/random/800x600/?${encodeURIComponent(topic)}`,
-        // Ensure factCheck has default values if missing
-        factCheck: article.factCheck || null,
-        // Ensure fake news detection fields are properly set
-        fakeNewsScore: article.fakeNewsScore !== undefined ? article.fakeNewsScore : null,
-        isFake: article.isFake !== undefined ? article.isFake : null
+        // Normalize factCheck data
+        factCheck: article.factCheck ? {
+          ...article.factCheck,
+          // Ensure credibilityScore is within 0-10 range
+          credibilityScore: article.factCheck.credibilityScore !== undefined 
+            ? Math.min(10, Math.max(0, article.factCheck.credibilityScore)) 
+            : 5,
+          // Ensure we have arrays for these fields
+          reliabilityPoints: article.factCheck.reliabilityPoints || [],
+          sourceVerification: article.factCheck.sourceVerification || [],
+          contentIssues: article.factCheck.contentIssues || [],
+          suggestedSources: article.factCheck.suggestedSources || []
+        } : null,
+        // Normalize fake news detection fields
+        fakeNewsScore: article.fakeNewsScore !== undefined 
+          ? Math.min(1, Math.max(0, article.fakeNewsScore)) 
+          : undefined,
+        isFake: article.isFake !== undefined ? article.isFake : undefined
       };
     });
     
@@ -53,6 +68,10 @@ export const analyzeArticleWithAgent = async (
   try {
     console.log(`Analyzing article with AI agent: ${articleTitle}`);
     
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     const response = await fetch(`${AI_AGENT_API_URL}/analyze`, {
       method: 'POST',
       headers: {
@@ -63,14 +82,36 @@ export const analyzeArticleWithAgent = async (
         articleText,
         articleUrl,
         topic
-      })
+      }),
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(`API error (${response.status}): ${errorText}`);
       throw new Error(`Failed to analyze article with AI agent: ${response.statusText}`);
     }
     
-    return await response.json() as FactCheckResult;
+    const data = await response.json();
+    console.log("Received fact check data:", data);
+    
+    // Validate the response structure
+    if (!data || typeof data.credibilityScore !== 'number') {
+      console.error("Invalid response format:", data);
+      throw new Error("Invalid response format from AI agent");
+    }
+    
+    // Normalize the response
+    return {
+      credibilityScore: Math.min(10, Math.max(0, data.credibilityScore)),
+      reliabilityPoints: Array.isArray(data.reliabilityPoints) ? data.reliabilityPoints : [],
+      misinformationWarning: data.misinformationWarning || null,
+      sourceVerification: Array.isArray(data.sourceVerification) ? data.sourceVerification : [],
+      contentIssues: Array.isArray(data.contentIssues) ? data.contentIssues : [],
+      suggestedSources: Array.isArray(data.suggestedSources) ? data.suggestedSources : []
+    };
   } catch (error) {
     console.error("Error in analyzeArticleWithAgent service:", error);
     throw error;

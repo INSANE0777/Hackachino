@@ -2,22 +2,25 @@
 import React, { useState } from 'react';
 import { NewsArticle } from '@/types/types';
 import { formatDistanceToNow } from 'date-fns';
-import { analyzeArticle, FactCheckResult } from '@/services/factCheckService';
+import { analyzeArticle, analyzeArticleWithAIAgent, FactCheckResult } from '@/services/factCheckService';
 import FactCheckBadge from './FactCheckBadge';
 import FactCheckResultComponent from './FactCheckResult';
 import { AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
 
 interface NewsCardProps {
   article: NewsArticle;
   color?: string;
+  onReadMore?: () => void;
 }
 
-const NewsCard: React.FC<NewsCardProps> = ({ article, color = 'pop-blue' }) => {
+const NewsCard: React.FC<NewsCardProps> = ({ article, color = 'pop-blue', onReadMore }) => {
   const { title, description, url, image, publishedAt, source, aiSummary, content } = article;
   const [factCheckResult, setFactCheckResult] = useState<FactCheckResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showFactCheck, setShowFactCheck] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   // Format date to relative time
   const formattedDate = formatDistanceToNow(new Date(publishedAt), { addSuffix: true });
@@ -25,6 +28,87 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, color = 'pop-blue' }) => {
   // Use a random background color if none provided
   const cardColors = ['pop-blue', 'pop-red', 'pop-yellow', 'pop-green', 'pop-purple'];
   const bgColor = color || cardColors[Math.floor(Math.random() * cardColors.length)];
+  
+  const defaultImage = "/images/news-placeholder.jpg";
+  
+  // Handle image loading errors
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  // Improved reliability classification logic
+  let reliabilityClass = "bg-gray-400"; // Default neutral
+  let reliabilityText = "Unverified";
+  
+  // Check if we have factCheck data from the AI agent
+  if (article.factCheck) {
+    const credibilityScore = article.factCheck.credibilityScore || 5;
+    
+    // More balanced credibility thresholds
+    if (credibilityScore >= 8) {
+      reliabilityClass = "bg-green-500";
+      reliabilityText = "Highly Reliable";
+    } else if (credibilityScore >= 6) {
+      reliabilityClass = "bg-green-400";
+      reliabilityText = "Reliable";
+    } else if (credibilityScore >= 4) {
+      reliabilityClass = "bg-yellow-500";
+      reliabilityText = "Moderate";
+    } else if (credibilityScore >= 2) {
+      reliabilityClass = "bg-orange-500";
+      reliabilityText = "Questionable";
+    } else {
+      reliabilityClass = "bg-red-500";
+      reliabilityText = "Unreliable";
+    }
+  } 
+  // Check if we have fake news detection data
+  else if (article.isFake !== undefined) {
+    // If we have fake news detection but no fact check
+    if (article.isFake === true) {
+      reliabilityClass = "bg-red-500";
+      reliabilityText = "Unreliable";
+    } else if (article.isFake === false) {
+      reliabilityClass = "bg-green-500";
+      reliabilityText = "Reliable";
+    }
+  }
+  // Check if we have a fakeNewsScore
+  else if (article.fakeNewsScore !== undefined) {
+    const score = article.fakeNewsScore;
+    if (score <= 0.2) {
+      reliabilityClass = "bg-green-500";
+      reliabilityText = "Reliable";
+    } else if (score <= 0.4) {
+      reliabilityClass = "bg-green-400";
+      reliabilityText = "Mostly Reliable";
+    } else if (score <= 0.6) {
+      reliabilityClass = "bg-yellow-500";
+      reliabilityText = "Moderate";
+    } else if (score <= 0.8) {
+      reliabilityClass = "bg-orange-500";
+      reliabilityText = "Questionable";
+    } else {
+      reliabilityClass = "bg-red-500";
+      reliabilityText = "Unreliable";
+    }
+  }
+  // Check source reputation as a fallback
+  else if (source && source.name) {
+    // List of generally reliable news sources
+    const reliableSources = [
+      'reuters', 'ap', 'associated press', 'bbc', 'npr', 'pbs', 
+      'the new york times', 'washington post', 'wall street journal', 
+      'the guardian', 'the economist', 'bloomberg', 'financial times',
+      'cnn', 'abc news', 'cbs news', 'nbc news', 'politico', 'axios'
+    ];
+    
+    const sourceLower = source.name.toLowerCase();
+    if (reliableSources.some(rs => sourceLower.includes(rs))) {
+      reliabilityClass = "bg-green-500";
+      reliabilityText = "Trusted Source";
+    }
+  }
   
   const handleFactCheck = async () => {
     if (factCheckResult) {
@@ -35,89 +119,46 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, color = 'pop-blue' }) => {
     
     setIsAnalyzing(true);
     try {
-      const result = await analyzeArticle(
+      console.log("Starting fact check for article:", title);
+      // Use the AI agent for fact-checking
+      const result = await analyzeArticleWithAIAgent(
         title, 
         content || description || title, 
-        url
+        url,
+        // Pass the topic if available from the article
+        article.topic || "news"
       );
+      console.log("Fact check result:", result);
       setFactCheckResult(result);
       setShowFactCheck(true);
     } catch (error) {
       console.error("Error fact-checking article:", error);
+      // Show a user-friendly error message
+      toast({
+        title: "Fact-checking failed",
+        description: "We couldn't analyze this article. Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setIsAnalyzing(false);
     }
-  };
-  
-  const NewsCard = ({ article, onReadMore }: NewsCardProps) => {
-    const [imageError, setImageError] = useState(false);
-    const defaultImage = "/images/news-placeholder.jpg"; // Make sure this file exists in public/images
-    
-    // Handle image loading errors
-    const handleImageError = () => {
-      setImageError(true);
-    };
-  
-    // Determine reliability class and text based on available data
-    let reliabilityClass = "bg-gray-400"; // Default neutral
-    let reliabilityText = "Unverified";
-    
-    if (article.factCheck) {
-      const credibilityScore = article.factCheck.credibilityScore || 5;
-      
-      if (credibilityScore >= 7) {
-        reliabilityClass = "bg-green-500";
-        reliabilityText = "Reliable";
-      } else if (credibilityScore >= 4) {
-        reliabilityClass = "bg-yellow-500";
-        reliabilityText = "Questionable";
-      } else {
-        reliabilityClass = "bg-red-500";
-        reliabilityText = "Unreliable";
-      }
-    } else if (article.isFake !== undefined) {
-      // If we have fake news detection but no fact check
-      if (article.isFake) {
-        reliabilityClass = "bg-red-500";
-        reliabilityText = "Unreliable";
-      } else {
-        reliabilityClass = "bg-green-500";
-        reliabilityText = "Reliable";
-      }
-    }
-  
-    return (
-      <div className="bg-white border-4 border-pop-black p-4 shadow-brutal mb-6">
-        <div className="relative mb-4 overflow-hidden border-2 border-pop-black aspect-video">
-          <img
-            src={imageError ? defaultImage : (article.image || defaultImage)}
-            alt={article.title}
-            className="w-full h-full object-cover"
-            onError={handleImageError}
-          />
-          <div className={`absolute top-0 right-0 ${reliabilityClass} text-white px-2 py-1 text-sm font-bold`}>
-            {reliabilityText}
-          </div>
-        </div>
-        
-        {/* ... rest of the component ... */}
-      </div>
-    );
   };
   
   return (
     <div className={`card-brutal overflow-hidden mb-8 bg-white hover:-translate-y-1 transition-all`}>
       <div className={`border-b-4 border-pop-black bg-${bgColor} h-2`}></div>
       
-      {image && (
-        <div className="relative w-full h-48 overflow-hidden">
-          <img 
-            src={image} 
-            alt={title} 
-            className="w-full h-full object-cover"
-          />
+      <div className="relative w-full h-48 overflow-hidden">
+        <img 
+          src={imageError ? defaultImage : (image || defaultImage)} 
+          alt={title} 
+          className="w-full h-full object-cover"
+          onError={handleImageError}
+        />
+        <div className={`absolute top-0 right-0 ${reliabilityClass} text-white px-2 py-1 text-sm font-bold`}>
+          {reliabilityText}
         </div>
-      )}
+      </div>
       
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">
