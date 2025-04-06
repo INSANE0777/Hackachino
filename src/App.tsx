@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import TopicsPage from "./pages/TopicsPage";
 import FeedPage from "./pages/FeedPage";
 import Auth from "./pages/Auth";
+import FactCheckerPage from "./pages/FactCheckerPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/topics" element={<TopicsPage />} />
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/factchecker" element={<FactCheckerPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

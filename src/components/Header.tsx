@@ -112,7 +112,7 @@ const NeoBrutalistHeader = () => {
       </div>
 
       {/* Navigation Bar */}
-      <div className="bg-pop-white border-b-4 border-pop-black shadow-md">
+      <div className="bg-pop-white border-b-4 border-pop-black shadow-md flex justify-center">
         <Navigation />
       </div>
     </header>

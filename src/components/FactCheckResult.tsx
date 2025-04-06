@@ -33,27 +33,27 @@ const FactCheckResultComponent: React.FC<FactCheckResultProps> = ({ result, isLo
   };
 
   return (
-    <div className={`p-3 bg-white border-l-2 rounded-md ${getBorderColor()} shadow-sm`}>
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-bebas text-sm flex items-center gap-1">
+    <div className={`p-2 bg-white border-l-2 rounded-md ${getBorderColor()} shadow-sm scale-95 transform origin-top-left`}>
+      <div className="flex items-center justify-between mb-1">
+        <h4 className="font-bebas text-xs flex items-center gap-1">
           {getIcon()} CREDIBILITY SCORE
         </h4>
         <FactCheckBadge score={result.credibilityScore} size="sm" showTooltip={true} />
       </div>
       
       {result.misinformationWarning && (
-        <div className="mb-2 text-xs p-2 bg-red-50 text-red-700 border border-red-100 rounded">
-          <div className="font-medium mb-1 flex items-center gap-1">
+        <div className="mb-1 text-xs p-1.5 bg-red-50 text-red-700 border border-red-100 rounded">
+          <div className="font-medium mb-0.5 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Warning:
           </div>
-          <p>{result.misinformationWarning}</p>
+          <p className="text-[10px]">{result.misinformationWarning}</p>
         </div>
       )}
       
-      <div className="text-xs space-y-2">
+      <div className="text-[10px] space-y-1.5">
         <div>
-          <h5 className="font-medium mb-1">Credibility Analysis:</h5>
-          <ul className="list-disc pl-4 space-y-1">
+          <h5 className="font-medium mb-0.5">Credibility Analysis:</h5>
+          <ul className="list-disc pl-3 space-y-0.5">
             {result.reliabilityPoints.map((point, index) => (
               <li key={index}>{point}</li>
             ))}
