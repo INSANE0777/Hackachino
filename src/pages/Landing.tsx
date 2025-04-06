@@ -114,9 +114,7 @@ const Landing = () => {
                   <span>START NOW</span>
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                 <Link to="#features" className="text-sm font-semibold text-pop-blue hover:underline">
-                   Learn More
-                 </Link>
+                {/* Learn More link removed */}
               </div>
             </div>
 
