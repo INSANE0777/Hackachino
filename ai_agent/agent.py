@@ -8,7 +8,8 @@ from langgraph.graph import StateGraph, END
 # API Keys
 GNEWS_API_KEY = "0df18457d9e427b44923da3997c56732"
 GEMINI_API_KEY = "AIzaSyBo0_nEWdFfUgNWawGmGOHcm4Sm3Av0coQ"
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent"
+
 
 # State definition
 class AgentState:
